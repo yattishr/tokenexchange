@@ -25,6 +25,27 @@ var account;
 window.App = {
   start: function() {
    //bootstrap everything
+   var self = this;
+
+      // Bootstrap the MetaCoin abstraction for Use.
+      ExchangeContract.setProvider(web3.currentProvider);
+      TokenContract.setProvider(web3.currentProvider);
+
+      // Get the initial account balance so it can be displayed.
+      web3.eth.getAccounts(function(err, accs) {
+        if (err != null) {
+          alert("There was an error fetching your accounts.");
+          return;
+        }
+
+        if (accs.length == 0) {
+          alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
+          return;
+        }
+
+        accounts = accs;
+        account = accounts[0];
+      });
   },
 
   setStatus: function(message) {
@@ -91,17 +112,91 @@ window.App = {
   },
   updateTokenBalance: function() {
     //update the token balance
+    var tokenInstance;
+      TokenContract.deployed().then(function(instance) {
+        tokenInstance = instance;
+        return tokenInstance.balanceOf.call(account);
+      }).then(function(value) {
+        var balance_element = document.getElementById("balanceTokenInToken");
+        balance_element.innerHTML = value.valueOf();
+      }).catch(function(e) {
+        console.log(e);
+        App.setStatus("Error getting balance; see log.");
+      });
   },
   watchTokenEvents: function() {
     //watch for token events
+    var tokenInstance;
+     TokenContract.deployed().then(function(instance) {
+       tokenInstance = instance;
+       tokenInstance.allEvents({},{fromBlock:0, toBlock:'latest'}).watch(function(error, result) {
+         var alertbox = document.createElement("div");
+         alertbox.setAttribute("class", "alert alert-info  alert-dismissible");
+         var closeBtn = document.createElement("button");
+         closeBtn.setAttribute("type", "button");
+         closeBtn.setAttribute("class", "close");
+         closeBtn.setAttribute("data-dismiss", "alert");
+         closeBtn.innerHTML = "<span>&times;</span>";
+         alertbox.appendChild(closeBtn);
+
+         var eventTitle = document.createElement("div");
+         eventTitle.innerHTML = '<strong>New Event: '+result.event+'</strong>';
+         alertbox.appendChild(eventTitle);
+
+
+         var argsBox = document.createElement("textarea");
+         argsBox.setAttribute("class", "form-control");
+         argsBox.innerText= JSON.stringify(result.args);
+         alertbox.appendChild(argsBox);
+         document.getElementById("tokenEvents").appendChild(alertbox);
+         //document.getElementById("tokenEvents").innerHTML += '<div class="alert alert-info  alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div></div><div>Args: '+JSON.stringify(result.args) + '</div></div>';
+
+       });
+     }).catch(function(e) {
+       console.log(e);
+       App.setStatus("Error getting balance; see log.");
+     });
   },
 
   sendToken: function() {
    //send tokens
+   var amount = parseInt(document.getElementById("inputAmountSendToken").value);
+      var receiver = document.getElementById("inputBeneficiarySendToken").value;
+
+      App.setStatus("Initiating transaction... (please wait)");
+
+      var tokenInstance;
+      return TokenContract.deployed().then(function(instance) {
+        tokenInstance = instance;
+        return tokenInstance.transfer(receiver, amount, {from: account});
+      }).then(function() {
+        App.setStatus("Transaction complete!");
+        App.updateTokenBalance();
+      }).catch(function(e) {
+        console.log(e);
+        App.setStatus("Error sending coin; see log.");
+      });
   },
 
   allowanceToken: function() {
     //token allowance
+    var self = this;
+
+    var amount = parseInt(document.getElementById("inputAmountAllowanceToken").value);
+    var receiver = document.getElementById("inputBeneficiaryAllowanceToken").value;
+
+    this.setStatus("Initiating transaction... (please wait)");
+    var tokenInstance;
+    return TokenContract.deployed().then(function(instance) {
+      tokenInstance = instance;
+      return tokenInstance.approve(receiver, amount, {from: account});
+    }).then(function() {
+      self.setStatus("Transaction complete!");
+      App.updateTokenBalance();
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error sending coin; see log.");
+    });
   }
 };
 
