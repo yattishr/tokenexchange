@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script src="./app.js"></script>
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">Navbar</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -19,10 +20,10 @@
           <a class="nav-link" href="/index.html">Exchange Overview<span class="sr-only">(current)</span></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/trading.html">Fixed Token Trading</a>
+          <a class="nav-link" href="/managetoken.html">Manage Token</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/managetoken.html">Manage Token</a>
+          <a class="nav-link" href="/trading.html">Fixed Token Trading</a>
         </li>
         <li class="nav-item">
           <a class="nav-link disabled" href="#">Disabled</a>
@@ -30,5 +31,24 @@
       </ul>
     </div>
   </nav>
+
+ <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-8">
+          <h1>Distributed Token Exchange</h1>
+          <p>This page is intended for the FIXED Token as sample only. You can send token and you can approve token.
+              <br/>
+              Additionally you can add a token to the exchange provided in this example.</p>
+          <h3>You have <span class="black"><span id="balanceTokenInToken"></span> TOKENS</span> in your account</h3>
+          <br>
+        </div>
+      </div>
+ </div>
+
+ <script type="text/javascript">
+   window.addEventListener('load', function () {
+       App.initManageToken();
+   });
+ </script>
 </body>
 </html>

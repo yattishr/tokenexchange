@@ -66,7 +66,18 @@ window.App = {
     //watch for Exchange Events
   },
   addTokenToExchange: function() {
-	//function to add tokens to the exchange
+  //function to add tokens to the exchange
+      var nameOfToken = document.getElementById("inputNameTokenAddExchange").value;
+      var addressOfToken = document.getElementById("inputAddressTokenAddExchange").value;
+      ExchangeContract.deployed().then(function(instance) {
+        return instance.addToken(nameOfToken, addressOfToken, {from: account});
+      }).then(function(txResult) {
+        console.log(txResult);
+        App.setStatus("Token added");
+      }).catch(function(e) {
+        console.log(e);
+        App.setStatus("Error getting balance; see log.");
+      });
   },
   refreshBalanceExchange: function() {
 	//refresh your balance
