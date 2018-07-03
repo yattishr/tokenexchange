@@ -54,13 +54,40 @@ window.App = {
   },
   printImportantInformation: function() {
     //print out some important information
+    ExchangeContract.deployed().then(function(instance) {
+        var divAddress = document.createElement("div");
+        divAddress.appendChild(document.createTextNode("Address Exchange: " + instance.address));
+        divAddress.setAttribute("class", "alert alert-info");
+        document.getElementById("importantInformation").appendChild(divAddress);
+      });
+      TokenContract.deployed().then(function(instance) {
+        var divAddress = document.createElement("div");
+        divAddress.appendChild(document.createTextNode("Address Token: " + instance.address));
+        divAddress.setAttribute("class", "alert alert-info");
+        document.getElementById("importantInformation").appendChild(divAddress);
+      });
+        web3.eth.getAccounts(function(err, accs) {
+        web3.eth.getBalance(accs[0], function(err1, balance) {
+        var divAddress = document.createElement("div");
+        var div = document.createElement("div");
+        div.appendChild(document.createTextNode("Active Account: " + accs[0]));
+        var div2 = document.createElement("div");
+        div2.appendChild(document.createTextNode("Balance in Ether: " + web3.fromWei(balance, "ether")));
+        divAddress.appendChild(div);
+        divAddress.appendChild(div2);
+        divAddress.setAttribute("class", "alert alert-info");
+        document.getElementById("importantInformation").appendChild(divAddress);
+          });
+        });
   },
   /**
    * Exchange specific functions here
    */
   initExchange: function() {
     //init Exchange
-
+    App.refreshBalanceExchange();
+    App.printImportantInformation();
+    App.watchExchangeEvents();
   },
   watchExchangeEvents: function() {
     //watch for Exchange Events
@@ -81,6 +108,24 @@ window.App = {
   },
   refreshBalanceExchange: function() {
 	//refresh your balance
+  //refresh your balance
+    var self = this;
+
+    var exchangeInstance;
+    ExchangeContract.deployed().then(function(instance) {
+      exchangeInstance = instance;
+      return exchangeInstance.getBalance("FIXED");
+    }).then(function(value) {
+      var balance_element = document.getElementById("balanceTokenInExchange");
+      balance_element.innerHTML = value.toNumber();
+      return exchangeInstance.getEthBalanceInWei();
+    }).then(function(value) {
+      var balance_element = document.getElementById("balanceEtherInExchange");
+      balance_element.innerHTML = web3.fromWei(value, "ether");
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error getting balance; see log.");
+    });
   },
   depositEther: function() {
   	  //deposit ether function
@@ -90,6 +135,19 @@ window.App = {
   },
   depositToken: function() {
 	//deposit token function
+  var amountToken = document.getElementById("inputAmountDepositToken").value;
+   var nameToken = document.getElementById("inputNameDepositToken").value;
+   var exchangeInstance;
+   ExchangeContract.deployed().then(function(instance) {
+     exchangeInstance = instance;
+     return exchangeInstance.depositToken(nameToken, amountToken, {from: account, gas: 4500000});
+   }).then(function(txResult) {
+     console.log(txResult);
+     App.refreshBalanceExchange();
+   }).catch(function(e) {
+     console.log(e);
+     self.setStatus("Error getting balance; see log.");
+   });  
   },
   /**
    * TRADING FUNCTIONS FROM HERE ON
