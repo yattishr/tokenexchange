@@ -55,6 +55,7 @@ window.App = {
   printImportantInformation: function() {
     //print out some important information
     ExchangeContract.deployed().then(function(instance) {
+        console.log("my exchange address is: " + instance.address);
         var divAddress = document.createElement("div");
         divAddress.appendChild(document.createTextNode("Address Exchange: " + instance.address));
         divAddress.setAttribute("class", "alert alert-info");
@@ -129,15 +130,43 @@ window.App = {
   },
   depositEther: function() {
   	  //deposit ether function
+      var self = this;
+      var amountEther = document.getElementById("inputAmountDepositEther").value;
+      var exchangeInstance;
+      ExchangeContract.deployed().then(function(instance) {
+        exchangeInstance = instance;
+        return exchangeInstance.depositEther( {value: web3.toWei(amountEther, "Ether"), from: account} );
+      }).then(function(txResult) {
+           App.refreshBalanceExchange();
+           document.getElementById("inputAmountDepositEther").value = "";
+         }).catch(function(e) {
+           console.log(e);
+           self.setStatus("Error getting balance; see log.");
+         });
   },
   withdrawEther: function() {
 	//withdraw ether function
+  var self = this;
+  var amountEther = document.getElementById("inputAmountWithdrawalEther").value;
+  var exchangeInstance;
+
+  ExchangeContract.deployed().then(function(instance) {
+    exchangeInstance = instance;
+    return exchangeInstance.withdrawEther( web3.toWei(amountEther, "Ether"),  {from: account});
+  }).then(function(txResult) {
+       App.refreshBalanceExchange();
+       document.getElementById("inputAmountWithdrawalEther").value = "";
+     }).catch(function(e) {
+       console.log("Error getting balance; see log. Failed with error: " + e);
+       self.setStatus("Error getting balance; see log.");
+     });
   },
   depositToken: function() {
 	//deposit token function
+  var self = this;
   var amountToken = document.getElementById("inputAmountDepositToken").value;
-   var nameToken = document.getElementById("inputNameDepositToken").value;
-   var exchangeInstance;
+  var nameToken = document.getElementById("inputNameDepositToken").value;
+  var exchangeInstance;
    ExchangeContract.deployed().then(function(instance) {
      exchangeInstance = instance;
      return exchangeInstance.depositToken(nameToken, amountToken, {from: account, gas: 4500000});
@@ -147,8 +176,34 @@ window.App = {
    }).catch(function(e) {
      console.log(e);
      self.setStatus("Error getting balance; see log.");
-   });  
+   });
   },
+
+/* Withdraw Token function */
+withdrawToken: function() {
+	//The Withdraw Token function
+
+    var nameToken = document.getElementById("inputNameWithdrawalToken").value;
+    var amountTokens = document.getElementById("inputAmountWithdrawalToken").value;
+    var exchangeInstance;
+    ExchangeContract.deployed().then(function(instance) {
+      exchangeInstance = instance;
+
+      App.setStatus("Initiating Withdrawal...");
+      return exchangeInstance.withdrawToken(nameToken, amountTokens,  {from: account});
+    }).then(function() {
+      document.getElementById("inputNameWithdrawalToken").value = "";
+      document.getElementById("inputAmountWithdrawalToken").value = "";
+      App.refreshBalanceExchange();
+
+      App.setStatus("Withdrawal complete.");
+    }).catch(function(e) {
+      console.log(e);
+      App.setStatus("Error getting balance; see log.");
+    });
+  },
+/* Withdraw Token function */
+
   /**
    * TRADING FUNCTIONS FROM HERE ON
    */
