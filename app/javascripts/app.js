@@ -213,17 +213,178 @@ withdrawToken: function() {
     App.updateOrderBooks();
     App.listenToTradingEvents();
   },
+
   updateOrderBooks: function() {
     //update the order books function
-  },
+    var exchangeInstance;
+    document.getElementById("buyOrderBook").innerHTML = null;
+    document.getElementById("sellOrderBook").innerHTML = null;
+
+    ExchangeContract.deployed().then(function(instance) {
+        exchangeInstance = instance;
+        return exchangeInstance.getSellOrderBook("FIXED");
+    }).then(function(sellOrderBook) {
+        console.log(sellOrderBook);
+        if(sellOrderBook[0].length == 0) {    
+          document.getElementById("sellOrderBook").innerHTML = '<span>No Sell Orders at the moment.</span>';
+        }
+        for(var i = 0; i < sellOrderBook[0].length; i++) {
+          document.getElementById("sellOrderBook").innerHTML += '<div>sell '+sellOrderBook[1][i]+'@'+sellOrderBook[0][i]+'</div>'; //sell 650@5000: sell 650 token for 5000 wei.
+        }
+        return exchangeInstance.getBuyOrderBook("FIXED");
+    }).then(function(buyOrderBook) {
+        console.log(buyOrderBook);
+        if(buyOrderBook[0].length == 0) {
+            document.getElementById("buyOrderBook").innerHTML = '<span>No Buy Orders at the moment.</span>';
+        }
+
+        for(var i = 0; i < buyOrderBook[0].length; i++) {                      
+          document.getElementById("buyOrderBook").innerHTML += '<div>sell '+buyOrderBook[1][i]+'@'+buyOrderBook[0][i]+'</div>'; //sell 650@5000: sell 650 token for 5000 wei.
+        }
+      }).catch(function(e) {
+          console.log(e);
+          App.setStatus("Error getting balance; see log.");
+      });     
+    },                     
+
   listenToTradingEvents: function() {
-//listen to trading events
+//listen for Order Trading events
+ var exchangeInstance;
+        ExchangeContract.deployed().then(function (instance) {
+            exchangeInstance = instance;
+
+            exchangeInstance.LimitSellOrderCreated({}, {
+                fromBlock: 0,
+                toBlock: 'latest'
+            }).watch(function (error, result) {
+                var alertbox = document.createElement("div");
+                alertbox.setAttribute("class", "alert alert-info  alert-dismissible");
+                var closeBtn = document.createElement("button");
+                closeBtn.setAttribute("type", "button");
+                closeBtn.setAttribute("class", "close");
+                closeBtn.setAttribute("data-dismiss", "alert");
+                closeBtn.innerHTML = "<span>&times;</span>";
+                alertbox.appendChild(closeBtn);
+
+                var eventTitle = document.createElement("div");
+                eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                alertbox.appendChild(eventTitle);
+                var argsBox = document.createElement("textarea");
+                argsBox.setAttribute("class", "form-control");
+                argsBox.innerText = JSON.stringify(result.args);
+                alertbox.appendChild(argsBox);
+                document.getElementById("limitdorderEvents").appendChild(alertbox);
+              });
+
+              exchangeInstance.LimitBuyOrderCreated({}, {
+                  fromBlock: 0,
+                  toBlock: 'latest'
+              }).watch(function (error, result) {
+                  var alertbox = document.createElement("div");
+                  alertbox.setAttribute("class", "alert alert-info  alert-dismissible");
+                  var closeBtn = document.createElement("button");
+                  closeBtn.setAttribute("type", "button");
+                  closeBtn.setAttribute("class", "close");
+                  closeBtn.setAttribute("data-dismiss", "alert");
+                  closeBtn.innerHTML = "<span>&times;</span>";
+                  alertbox.appendChild(closeBtn);
+                  var eventTitle = document.createElement("div");
+                  eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                  alertbox.appendChild(eventTitle);
+  
+                  var argsBox = document.createElement("textarea");
+                  argsBox.setAttribute("class", "form-control");
+                  argsBox.innerText = JSON.stringify(result.args);
+                  alertbox.appendChild(argsBox);
+                  document.getElementById("limitdorderEvents").appendChild(alertbox);
+                });
+
+                exchangeInstance.SellOrderFulfilled({}, {fromBlock: 0, toBlock: 'latest'}).watch(function (error, result) {
+                    var alertbox = document.createElement("div");
+                    alertbox.setAttribute("class", "alert alert-info  alert-dismissible");
+                    var closeBtn = document.createElement("button");
+                    closeBtn.setAttribute("type", "button");
+                    closeBtn.setAttribute("class", "close");
+                    closeBtn.setAttribute("data-dismiss", "alert");
+                    closeBtn.innerHTML = "<span>&times;</span>";
+                    alertbox.appendChild(closeBtn);
+    
+                    var eventTitle = document.createElement("div");
+                    eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                    alertbox.appendChild(eventTitle);
+                    var argsBox = document.createElement("textarea");
+                    argsBox.setAttribute("class", "form-control");
+                    argsBox.innerText = JSON.stringify(result.args);
+                    alertbox.appendChild(argsBox);
+                    document.getElementById("fulfilledorderEvents").appendChild(alertbox);
+                  });
+
+                  exchangeInstance.BuyOrderFulfilled({}, {fromBlock: 0, toBlock: 'latest'}).watch(function (error, result) {
+                      var alertbox = document.createElement("div");
+                      alertbox.setAttribute("class", "alert alert-info  alert-dismissible");
+                      var closeBtn = document.createElement("button");
+                      closeBtn.setAttribute("type", "button");
+                      closeBtn.setAttribute("class", "close");
+                      closeBtn.setAttribute("data-dismiss", "alert");
+                      closeBtn.innerHTML = "<span>&times;</span>";
+                      alertbox.appendChild(closeBtn);
+      
+                      var eventTitle = document.createElement("div");
+                      eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                      alertbox.appendChild(eventTitle);
+                      var argsBox = document.createElement("textarea");
+                      argsBox.setAttribute("class", "form-control");
+                      argsBox.innerText = JSON.stringify(result.args);
+                      alertbox.appendChild(argsBox);
+                      document.getElementById("fulfilledorderEvents").appendChild(alertbox);
+                    });
+
+                  }).catch(function (e) {
+                      console.log(e);
+                      App.setStatus("Error getting balance; see log.");
+                  });                                                                                                                                        
   },
+
   sellToken: function() {
  //sell token
+        var tokenName = document.getElementById("inputNameSellToken").value;
+        var amount = document.getElementById("inputAmountSellToken").value;
+        var price = document.getElementById("inputPriceSellToken").value;
+
+        var exchangeInstance;
+        ExchangeContract.deployed().then(function(instance) {
+            exchangeInstance = instance;
+            console.log(tokenName+price+amount);
+            return exchangeInstance.sellToken(tokenName, price, amount, {from: account, gas: 4000000});
+        }).then(function(txResult) {
+            App.refreshBalanceExchange();
+            App.updateOrderBooks();
+        }).catch(function(e) {
+            console.log(e);
+            App.setStatus("Error; see log.");
+        }); 
   },
   buyToken: function() {
 //buy token
+
+var tokenName = document.getElementById("inputNameBuyToken").value;
+var amount = document.getElementById("inputAmountBuyToken").value;
+var price = document.getElementById("inputPriceBuyToken").value;
+
+var exchangeInstance;
+ExchangeContract.deployed().then(function(instance) {
+    exchangeInstance = instance;
+    console.log(tokenName+price+amount);
+    return exchangeInstance.buyToken(tokenName, price, amount, {from: account, gas: 4000000});
+}).then(function(txResult) {
+    App.refreshBalanceExchange();
+    App.updateOrderBooks();
+}).catch(function(e) {
+    console.log(e);
+    App.setStatus("Error; see log.");
+}); 
+
+
   },
 
   /**

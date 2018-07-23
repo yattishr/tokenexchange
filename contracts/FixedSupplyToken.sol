@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.16;
 
 // ----------------------------------------------------------------------------
 // 'FIXED' 'Example Fixed Supply Token' token contract
