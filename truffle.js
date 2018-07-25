@@ -18,7 +18,8 @@ module.exports = {
                host: "localhost",
                port: 8545,
                network_id: "4", // Match 4 network id for Rinkeby Testnet.
-               gas: 4700000// set the max gas limit.
+               gas: 4700000, // set the max gas limit.
+               from: "0x2a17b2AE525D02a1F3A23AFFd27609611961f68c" // rinkeby account 1
           }
      }
 };
